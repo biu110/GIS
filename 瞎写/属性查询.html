@@ -1,0 +1,109 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Document</title>
+  <link rel="stylesheet" href="https://js.arcgis.com/4.30/esri/themes/light/main.css">
+  <script src="https://js.arcgis.com/4.30/"></script>
+  <style>
+    html,
+    body,
+    #viewDiv {
+      padding: 0;
+      margin: 0;
+      height: 100%;
+      width: 100%;
+    }
+  </style>
+  <script>
+    require([
+      "esri/config",
+      "esri/Map",
+      "esri/views/SceneView",
+      "esri/layers/FeatureLayer",
+      "esri/layers/GraphicsLayer",
+      "esri/rest/query",
+      "esri/rest/support/Query"
+    ], function (esriConfig, Map, SceneView, GraphicsLayer, query, Query) {
+      esriConfig.apiKey = "AAPK816905600159480ca9b2abfe361e6207iPYVIdXZ7gXCjVQi066hTutMI40_AoNTxhbV_ORI2IGq6IHV5UXSPhF8UH2WAzi1";
+      const map = new Map({
+        basemap: "arcgis-navigation", // basemap styles service
+        ground: "world-elevation", //地形服务可以使用自己发布的服务
+      });
+      const view = new SceneView({
+        container: "viewDiv",
+        map: map,
+        center: [108.95, 34.27],
+        zoom: 4,
+      });
+      const source = []
+      const queryURL = "*"
+      view.ui.add("namequery", "top-right")
+      addEventListener("click", function () {
+        const nameQuery = new Query({
+          returnGeometry: true,
+          ObjectIds: ["1"],
+        })
+        query.excuteQueryJSON(queryURL, nameQuery).then((featureSet) => {
+          if (featureSet.features[0]) {
+            source = featureSet.features
+            /* table_data.value=featureSet,features.map((item)=>{//获取要素属性的集合,传值给表格的双向绑定变量
+              return item.attributes
+            })
+            table_display·value="block"//显示表格
+            */
+            const resultLayer = new GraphicsLayer({
+              source: source,
+              title: "resultLayer",
+              objectIdField: "objectid",
+              field:[
+                {name:"name",alias:"地块名称",type:"string"},
+                {name:'address',alias:'地址',type:'string'},
+              ],
+              geometryType: "polygon",
+              labelingInfo:[{
+                labelExpressionInfo:{
+                  expression: `$feature.name`
+                },
+                minScale: 50000,
+                symbol:{
+                  type: "text",
+                  front:{
+                    color: [0, 0, 0, 1],
+                    haloColor: [255, 255, 255],
+                    haloSize: 1
+                  }
+                }
+              }],
+              renderer:{
+                type: "simple",
+                symbol: {
+                  type: "simple-fill",
+                  color: [255, 255, 255, 0.5],
+                  outline: {
+                    color: [0, 0, 0, 1],
+                    width: 1
+                  }
+                }
+              }
+            })
+            map.add(resultLayer)
+          }else{
+            alert("查询结果为空")
+          }
+        })
+      })
+    });
+  </script>
+</head>
+
+<body>
+  <div id="viewDiv"> </div>
+  <div>
+    <button id="namequery">按名称查询</button>
+  </div>
+</body>
+
+</html>

@@ -1,0 +1,68 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Document</title>
+  <link rel="stylesheet" href="https://js.arcgis.com/4.30/esri/themes/light/main.css" />
+  <script src="https://js.arcgis.com/4.30/"></script>
+  <style>
+    html,
+    body,
+    #mainViewDiv {
+      padding: 0;
+      margin: 0;
+      height: 100%;
+      width: 100%;
+    }
+    #overviewViewDiv {
+      position: absolute;
+      top: 10px;
+      right: 10px;
+      width: 300px;
+      height: 200px;
+    }
+  </style>
+  <script>
+    require(["esri/config","esri/views/MapView", "esri/Map", "esri/layers/GraphicsLayer", "esri/views/SceneView"],
+      function (esriConfig, MapView, Map, GraphicsLayer, SceneView) {
+        esriConfig.apiKey = "AAPK816905600159480ca9b2abfe361e6207iPYVIdXZ7gXCjVQi066hTutMI40_AoNTxhbV_ORI2IGq6IHV5UXSPhF8UH2WAzi1";
+        // 创建主视图
+        const mainMap = new Map({
+          basemap: "topo-vector"
+        });
+
+        const mainView = new SceneView({
+          container: "mainViewDiv",  // 主视图的容器
+          map: mainMap,
+          center: [116, 39], // 经度，纬度
+          zoom: 8
+        });
+
+        // 创建鹰眼视图
+        const overviewMap = new Map({
+          basemap: "arcgis-navigation"
+        });
+      
+        const overviewView = new MapView({
+          container: "overviewViewDiv",  // 鹰眼视图的容器
+          map: overviewMap,
+          center: mainView.center,
+          zoom: 4
+        });
+        overviewView.ui.components = []; // 隐藏底部版权信息
+        // 监听主视图的事件，更新鹰眼视图
+        mainView.watch("extent", function (newExtent) {
+          overviewView.goTo(newExtent); // 鉴于主视图的变化更新鹰眼视图
+        });
+      });
+  </script>
+</head>
+
+<body>
+  <div id="mainViewDiv"></div>
+  <div id="overviewViewDiv"></div>
+</body>
+
+</html>

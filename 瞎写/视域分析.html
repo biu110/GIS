@@ -1,0 +1,185 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="initial-scale=1,maximum-scale=1,user-scalable=no" />
+  <title>Interactive viewshed analysis | Sample | ArcGIS Maps SDK for JavaScript 4.30</title>
+  <style>
+    html,
+    body,
+    #viewDiv {
+      width: 100%;
+      height: 100%;
+      margin: 0;
+      padding: 0;
+    }
+    #viewshedComponent {
+      width: 270px;
+    }
+    #viewshedComponent calcite-button {
+      display: flex;
+    }
+    #promptText {
+      margin-top: 0.4rem;
+    }
+  </style>
+  <link rel="stylesheet" href="https://js.arcgis.com/4.30/esri/themes/light/main.css" />
+  <script src="https://js.arcgis.com/4.30/"></script>
+  <script type="module" src="https://js.arcgis.com/calcite-components/2.11.1/calcite.esm.js"></script>
+  <link rel="stylesheet" type="text/css" href="https://js.arcgis.com/calcite-components/2.11.1/calcite.css" />
+  <script>
+    require([
+      "esri/Map",
+      "esri/views/SceneView",
+      "esri/geometry/SpatialReference",
+      "esri/core/promiseUtils",
+      "esri/core/reactiveUtils",
+      "esri/views/3d/environment/SunLighting",
+      "esri/analysis/ViewshedAnalysis",
+      "esri/analysis/Viewshed"
+    ], function (
+      Map,
+      SceneView,
+      SpatialReference,
+      promiseUtils,
+      reactiveUtils,
+      SunLighting,
+      ViewshedAnalysis,
+      Viewshed
+    ) {
+      const view = new SceneView({
+        container: "viewDiv",
+        camera: {
+          position: {
+            spatialReference: SpatialReference.WebMercator,
+            x: -9753837.742627423,
+            y: 5140806.202422867,
+            z: 995.4546383377165
+          },
+          heading: 1.2311944909542853,
+          tilt: 70.07900968078631
+        },
+        map: new Map({
+          basemap: "topo-3d",
+          ground: "world-elevation"
+        }),
+        environment: {
+          lighting: new SunLighting({
+            date: new Date("January 18, 2024 12:50:00 UTC-6"),
+            directShadowsEnabled: true
+          })
+        }
+      });
+
+      view.when(async () => {
+        // 隐藏地图底图标签
+        const labelsLayer = view.map.basemap.referenceLayers.find(
+          (layer) => layer.title === "Places and Labels"
+        );
+        labelsLayer.visible = false;
+
+        // 创建视域形状
+        const viewshed = new Viewshed({
+        });
+        // 初始化视域分析添加到地图
+        const viewshedAnalysis = new ViewshedAnalysis({ viewsheds: [viewshed] });
+        view.analyses.add(viewshedAnalysis);
+
+        // 访问视域分析视图
+        const analysisView = await view.whenAnalysisView(viewshedAnalysis);
+        
+        // 使现有分析具有交互性，然后选择创建的视域。
+        analysisView.interactive = true;
+        analysisView.selectedViewshed = viewshed;
+
+        // 设置按钮的交互性
+        const createButton = document.getElementById("createButton");
+        const cancelButton = document.getElementById("cancelButton");
+        const promptText = document.getElementById("promptText");
+
+        // 控制器，允许取消正在进行的视域创建操作。
+        let abortController = null;
+
+        createButton.addEventListener("click", () => {
+          // 取消任何待处理的创建操作。
+          stopCreating();
+
+          // 为新操作创建新的 abort controller （中止控制器）。
+          abortController = new AbortController();
+
+          updateUI();
+
+          // 保存当前数量的视域，以便在创建新视域时进行追踪。
+          const viewshedCounter = viewshedAnalysis.viewsheds.length;
+          // 每当创建并选择新视域时进行观察，然后停止创建方法。
+          reactiveUtils.when(
+            () => viewshedAnalysis.viewsheds.length > viewshedCounter && analysisView.selectedViewshed,
+            () => {
+              stopCreating();
+              updateUI();
+            }
+          );
+
+          // 将控制器作为参数传递给交互式创建方法，并在创建视域完成后调度 updateUI 函数。
+          analysisView
+            .createViewsheds(abortController)
+            .catch((e) => {
+              // 取消操作后，请勿执行任何操作。将引发任何其他错误。
+              if (!promiseUtils.isAbortError(e)) {
+                throw e;
+              }
+            })
+            .finally(() => {
+              // 更新 UI 以反映非创建模式。
+              updateUI();
+            });
+        });
+
+        cancelButton.addEventListener("click", () => {
+          // 按 Cancel 按钮将停止视域创建过程并相应地更新 UI。
+          stopCreating();
+          updateUI();
+        });
+        // Cancel the creation process and updates the UI when ESC is pressed.
+        view.on("key-down", (event) => {
+          if ((event.key = "Escape")) {
+            stopCreating();
+            updateUI();
+          }
+        });
+
+        // 取消创建过程并在按下 ESC 时更新 UI。
+        function stopCreating() {
+          abortController?.abort();
+          abortController = null;
+        }
+
+        // 根据是否有待处理的操作更新 UI 组件。
+        function updateUI() {
+          const creating = abortController != null;
+          createButton.style.display = !creating ? "flex" : "none";
+          cancelButton.style.display = creating ? "flex" : "none";
+          promptText.style.display = creating ? "flex" : "none";
+        }
+
+        // 将组件添加到 UI。
+        view.ui.add("viewshedComponent", "top-right");
+      });
+
+    });
+  </script>
+</head>
+
+<body>
+  <div id="viewDiv"></div>
+  <calcite-card id="viewshedComponent">
+    <calcite-button id="createButton">Create viewshed</calcite-button>
+    <calcite-button id="cancelButton" style="display:none">Cancel </calcite-button>
+    <div id="promptText" style="display: none">
+      <em>Start the analysis by clicking in the scene to place the observer point and set the target.</em>
+    </div>
+  </calcite-card>
+</body>
+
+</html>
+

@@ -1,0 +1,34 @@
+<html>
+
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="initial-scale=1, maximum-scale=1, user-scalable=no">
+  <title>ArcGIS Maps SDK for JavaScript Tutorials: Display a scene</title>
+  <link rel="stylesheet" href="https://js.arcgis.com/4.30/esri/themes/light/main.css">
+  <script src="https://js.arcgis.com/4.30/"></script>
+  <link rel="stylesheet" href="2023.css">
+  <script src="2023.js"></script>
+</head>
+
+<body>
+  <div id="viewDiv"></div>
+  
+  <!-- 创建一个盒子，把sketch功能放到盒子中，sketch功能可以用来绘制多边形和过滤图层。 -->
+  <div id="sketch">
+    Use the sketch widget to create and modify the filter polygons:
+    <div id="sketchContainer"></div>
+    <div id="selection">
+      <calcite-button id="contains" appearance="solid">Contains</calcite-button>
+      <calcite-button id="disjoint" appearance="outline">Disjoint</calcite-button>
+    </div>
+  </div>
+
+  <div id="topbar">
+    <button class="action-button esri-icon-measure-line" id="distanceButton" type="button"
+      title="Measure distance between two points"></button>
+    <button class="action-button esri-icon-measure-area" id="areaButton" type="button" title="Measure area"></button>
+  </div>
+
+</body>
+
+</html>

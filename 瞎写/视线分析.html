@@ -1,0 +1,76 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Document</title>
+  <link rel="stylesheet" href="https://js.arcgis.com/4.30/esri/themes/light/main.css" />
+  <script src="https://js.arcgis.com/4.30/"></script>
+  <style>
+    html,
+    body,
+    #viewDiv {
+      padding: 0;
+      margin: 0;
+      height: 100%;
+      width: 100%;
+    }
+    #menu {
+      background-color: #fff;
+      text-align: center
+    }
+    
+  </style>
+  <script>
+    require([
+      "esri/WebScene",
+      "esri/views/SceneView",
+      "esri/widgets/LineOfSight",
+
+    ], function (WebScene, SceneView, LineOfSight) {
+      const scene = new WebScene({
+        portalItem: {
+          id: "82127fea11d6439abba3318cb93252f7"
+        }
+      })
+      const view = new SceneView({
+        map: scene,
+        container: "viewDiv"
+      })
+      //可视化小组件
+      const lineOfSight = new LineOfSight({
+        view: view,
+        container: "sightWidget"
+      })
+      view.ui.add("menu", "top-right")
+      //增加符号标记视野交点
+      //const viewModel = lineOfSight.viewModel
+      //观察观察者事业改变
+      /* const viewModel = lineOfSight.viewModel;
+
+      viewModel.observer = new Point({
+        latitude: 42.3521,
+        longitude: -71.0559,
+        z: 147.139
+      });
+
+      viewModel.targets = [
+        createTarget(42.3492, -71.0529),
+        createTarget(42.3477, -71.0542)
+      ]; */
+
+    })
+  </script>
+</head>
+
+<body>
+  <div id="viewDiv"></div>
+  <div id="menu">
+    <h4>视线分析</h4>
+    <div id="sightWidget">
+    </div>
+  </div>
+</body>
+
+</html>

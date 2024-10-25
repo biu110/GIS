@@ -1,0 +1,88 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Document</title>
+  <link rel="stylesheet" href="https://js.arcgis.com/4.30/esri/themes/light/main.css" />
+  <script src="https://js.arcgis.com/4.30/"></script>
+  <style>
+    html,
+    body,
+    #viewDiv {
+      padding: 0;
+      margin: 0;
+      height: 100%;
+      width: 100%;
+    }
+
+    #buttonDiv {
+      position: absolute;
+      top: 10px;
+      right: 10px;
+    }
+  </style>
+  <script>
+    require([
+      "esri/config",
+      "esri/Map",
+      "esri/views/SceneView",
+      "esri/widgets/Sketch",
+      "esri/layers/GraphicsLayer",
+      "esri/geometry/geometryEngine"
+    ], function (esriConfig, Map, SceneView, Sketch, GraphicsLayer, geometryEngine) {
+      esriConfig.apiKey = "AAPK816905600159480ca9b2abfe361e6207iPYVIdXZ7gXCjVQi066hTutMI40_AoNTxhbV_ORI2IGq6IHV5UXSPhF8UH2WAzi1";
+
+      const graphicsLayer = new GraphicsLayer();
+
+      const map = new Map({
+        basemap: "topo-vector",
+        layers: [graphicsLayer]  //直接将图层添加到map中
+      });
+
+      const view = new SceneView({
+        container: "viewDiv",
+        map: map,
+        zoom: 18,
+        center: [139.5716, 35.6964]
+      });
+
+      view.when(() => {
+        const sketch = new Sketch({
+          layer: graphicsLayer,
+          view: view,
+          // graphic will be selected as soon as it is created
+          creationMode: "update"
+        });
+        view.ui.add(sketch, "top-right");
+        sketch.on("create", function (event) {
+          if (event.state === "complete" && event.graphic) { // 检查 event.graphic 是否存在
+            const buffer = geometryEngine.buffer(event.graphic.geometry, 5, "kilometers");
+            const bufferGraphic = new Graphic({
+              geometry: buffer,
+              symbol: {
+                type: "simple-fill",
+                color: [255, 140, 0, 0.3],
+                style: "solid",
+                outline: {
+                  color: [255, 140, 0, 1],
+                  width: 2
+                }
+              }
+            });
+            graphicLayer.add(bufferGraphic); // 将缓冲区图形添加到图形层
+          } else {
+            console.log("未完成绘制")
+          }
+        });
+      });
+
+
+    })
+  </script>
+</head>
+<div id="viewDiv"></div>
+<body>
+</body>
+</html>

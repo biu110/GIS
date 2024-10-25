@@ -1,0 +1,56 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>自定义底图</title>
+  <style>
+  html,
+  body,
+  #viewDiv {
+    padding: 0;
+    margin: 0;
+    height: 100%;
+    width: 100%;
+  }
+</style>
+<link rel="stylesheet" href="https://js.arcgis.com/4.30/esri/themes/light/main.css">
+<script src="https://js.arcgis.com/4.30/"></script>
+<script>
+//1、必须要有一个基本的HTML骨架
+  //2、引入JS API的样式文件
+  //3、加载相应的地图模块，具体要跟据自己的功能需求
+  //4、实例化模块
+  //三维自定义底图：引入SceneView，设置basemap为三维地图，设置视图的高度和宽度，设置视图的中心点和缩放级别
+  require([
+    "esri/Map",
+    "esri/views/MapView",
+    "esri/Basemap",
+    "esri/layers/TileLayer",
+  ], function(Map, MapView, Basemap, TileLayer) {
+      var basemap = new Basemap({
+        baseLayers: [
+          new TileLayer({
+            url: "https://services.arcgisonline.com/arcgis/rest/services/World_Terrain_Base/MapServer",
+            title: "Basemap"
+          }),
+        ],
+          title: "basemap",
+          id: "basemap"
+        });
+      var map = new Map({
+        basemap: basemap
+      });
+      var view = new MapView({ //MapView是二维地图视图，SceneView是三维地图视图
+        container: "viewDiv",
+        map: map,
+        center: [116.39, 39.9],
+        zoom: 5
+      });
+    });
+    </script>
+</head>
+<body>
+  <div id="viewDiv"></div>
+</body>
+</html>

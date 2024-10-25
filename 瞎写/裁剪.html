@@ -1,0 +1,210 @@
+<html>
+
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="initial-scale=1, maximum-scale=1, user-scalable=no">
+  <title>ArcGIS Maps SDK for JavaScript Tutorials: Display a scene</title>
+  <style>
+    html,
+    body,
+    #viewDiv {
+      padding: 0;
+      margin: 0;
+      height: 100%;
+      width: 100%;
+    }
+
+    #buttonDiv {
+      position: absolute;
+      padding: 10px 20px;
+      top: 10px;
+      right: 10px;
+      background-color: white;
+      display: flex;
+      justify-content: space-evenly;
+      border-radius: 2px;
+    }
+
+    #drawpolygon,
+    #drawline,
+    #reset {
+      background-color: #0079c1;
+      color: white;
+      border: none;
+      padding: 5px 10px;
+      margin: 5px;
+      border-radius: 2px;
+      cursor: pointer;
+    }
+  </style>
+
+  <link rel="stylesheet" href="https://js.arcgis.com/4.30/esri/themes/light/main.css">
+  <script src="https://js.arcgis.com/4.30/"></script>
+
+  <script>
+    require([
+      "esri/config",
+      "esri/Map",
+      "esri/views/SceneView",
+      "esri/layers/GraphicsLayer",
+      "esri/geometry/geometryEngine",
+      "esri/widgets/Sketch",
+      "esri/widgets/Sketch/SketchViewModel",
+      "esri/Graphic"
+    ], function (esriConfig, Map, SceneView, GraphicsLayer, geometryEngine, Sketch, SketchViewModel, Graphic) {
+      esriConfig.apiKey = "AAPK816905600159480ca9b2abfe361e6207iPYVIdXZ7gXCjVQi066hTutMI40_AoNTxhbV_ORI2IGq6IHV5UXSPhF8UH2WAzi1";
+      const map = new Map({
+        basemap: "arcgis-navigation", // basemap styles service
+        ground: "world-elevation", //地形服务可以使用自己发布的服务
+      })
+      const view = new SceneView({
+        container: "viewDiv",
+        map: map,
+        center: [108.95, 34.27],
+        zoom: 4,
+      })
+
+      const graphic = new Graphic({
+        symbol: {
+          title: "test",
+          type: "simple-fill", // autocasts as new SimpleFillSymbol()
+          color: [255, 140, 0, 0.3],
+          style: "solid",
+          outline: {
+            // autocasts as new SimpleLineSymbol()
+            color: [255, 140, 0, 1],
+            width: 2
+          }
+        },
+        geometry: {
+          type: "polygon",
+          spatialReference: {
+            wkid: 102100
+          }
+        },
+      })
+      const graphicLayer = new GraphicsLayer({
+        graphic: [graphic],
+        elevationInfo: {
+          mode: "on-the-ground"
+        }
+      })
+      map.add(graphicLayer)
+    
+      const sketchViewModel = new SketchViewModel({
+        layer: graphicLayer,
+        view: view,
+      })
+      const drawpolygon = document.getElementById("drawpolygon")
+      const drawline = document.getElementById("drawline")
+      const reset = document.getElementById("reset")
+      drawpolygon.addEventListener("click", () => {
+        sketchViewModel.create("polygon", { mode: "click" })
+      })
+      drawline.addEventListener("click", () => {
+        sketchViewModel.create("polyline", { mode: "click" })
+      })
+      reset.addEventListener("click", () => {
+        graphicLayer.removeAll() // 清除图层上的所有图形
+      });
+     
+      /* sketchViewModel.on("create", (event) => {
+        if (event.state === "complete") {
+          if (event.graphic.geometry.type === "polyline") {
+            for (let graphic of graphicLayer.newGraphic.items) {
+              if (graphic.geometry.type === "polygon") {
+                if (geometryEngine.cut(graphic.geometry, event.graphic.geometry).length > 2) {
+                  for (let item of geometryEngine.cut(graphic.geometry, event.graphic.geometry)) {
+                    const graphic_ = new Graphic({
+                      symbol: sketchViewModel.symbol,
+                      geometry: item
+                    })
+                    graphicLayer.add(graphic_)
+                  }
+                } else {
+                  newGraphic.push(graphic)
+                }
+              }
+            }
+            graphicLayer.newGraphic.removeAll()
+            graphicLayer.newGraphic.addMany(newGraphic)
+            newGraphic = []
+          }
+        }
+      }) */
+
+      /*   sketchViewModel.on("create", (event) => {
+      if (event.state === "complete") {
+          if (event.graphic.geometry.type === "polyline") {
+              // 检查 graphicLayer.newGraphic 是否已定义并初始化
+              if (graphicLayer.newGraphic && graphicLayer.newGraphic.items) {
+                  for (let graphic of graphicLayer.newGraphic.items) {
+                      if (graphic.geometry.type === "polygon") {
+                          if (geometryEngine.cut(graphic.geometry, event.graphic.geometry).length > 2) {
+                              for (let item of geometryEngine.cut(graphic.geometry, event.graphic.geometry)) {
+                                  const graphic_ = new Graphic({
+                                      symbol: sketchViewModel.symbol,
+                                      geometry: item
+                                  });
+                                  graphicLayer.add(graphic_);
+                              }
+                          } else {
+                              newGraphic.push(graphic);
+                          }
+                      }
+                  }
+              } else {
+                  console.error('graphicLayer.newGraphic 或其 items 为 undefined');
+              }
+              graphicLayer.newGraphic.removeAll();
+              graphicLayer.newGraphic.addMany(newGraphic);
+              newGraphic = [];
+          }
+      }
+  }); */
+      
+
+     /*  // 更新 sketchViewModel 的 create 事件
+      sketchViewModel.on("create", (event) => {
+        if (event.state === "complete") {
+          if (event.graphic.geometry.type === "polyline") {
+            // 注意, 这里我们不再使用 graphicLayer.newGraphic
+            let items = graphicLayer.graphics.toArray(); // 获取当前图层上的所有图形
+            for (let graphic of items) {
+              if (graphic.geometry.type === "polygon") {
+                let cutGeometries = geometryEngine.cut(graphic.geometry, event.graphic.geometry);
+                if (cutGeometries.length > 2) {
+                  for (let item of cutGeometries) {
+                    const graphic_ = new Graphic({
+                      symbol: sketchViewModel.symbol,
+                      geometry: item
+                    });
+                    graphicLayer.add(graphic_); // 添加新切割的图形
+                  }
+                } else {
+                  newGraphic.push(graphic); // 记录未被切割的多边形
+                }
+              }
+            }
+            graphicLayer.removeAll(); // 清空图层上的所有图形
+            graphicLayer.addMany(newGraphic); // 添加未切割的多边形
+            newGraphic = []; // 清空新图形数组
+          }
+        }
+      }); */
+
+
+    })
+  </script>
+</head>
+
+<body>
+  <div id="viewDiv"></div>
+  <div id="buttonDiv">
+    <button id="drawpolygon">绘制面要素</button>
+    <button id="drawline">绘制分割线</button>
+    <button id="reset">重置</button>
+  </div>
+</body>
+
+</html>

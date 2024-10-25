@@ -1,0 +1,118 @@
+<html>
+
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="initial-scale=1, maximum-scale=1, user-scalable=no">
+  <title>ArcGIS Maps SDK for JavaScript Tutorials: Display a scene</title>
+  <style>
+    html,
+    body,
+    #viewDiv {
+      padding: 0;
+      margin: 0;
+      height: 100%;
+      width: 100%;
+    }
+  </style>
+
+  <link rel="stylesheet" href="https://js.arcgis.com/4.30/esri/themes/light/main.css">
+  <script src="https://js.arcgis.com/4.30/"></script>
+
+  <script>
+    require([
+      "esri/config",
+      "esri/Map",
+      "esri/views/SceneView",
+      "esri/layers/FeatureLayer",
+      "esri/layers/GraphicsLayer",
+      "esri/geometry/geometryEngine",
+      "esri/widgets/Sketch",
+      "esri/Graphic"
+    ], function (esriConfig, Map, SceneView, FeatureLayer, GraphicsLayer, geometryEngine, Sketch, Graphic) {
+      esriConfig.apiKey = "AAPK816905600159480ca9b2abfe361e6207iPYVIdXZ7gXCjVQi066hTutMI40_AoNTxhbV_ORI2IGq6IHV5UXSPhF8UH2WAzi1";
+      const map = new Map({
+        basemap: "arcgis-navigation", // basemap styles service
+        ground: "world-elevation", //地形服务可以使用自己发布的服务
+      })
+      const view = new SceneView({
+        container: "viewDiv",
+        map: map,
+        center: [108.95, 34.27],
+        zoom: 4,
+      })
+      /* const featureLayer = new FeatureLayer({
+        url: "https://services3.arcgis.com/KE5B4kx458aPGuKZ/arcgis/rest/services/testGDB/FeatureServer/1",
+        renderer: {
+          type: "simple", // Set the renderer type to "simple"
+          symbol: {
+            type: "simple-fill", // Setting it as a fill symbol for polygons
+            color: [227, 139, 79, 0.8], // Adjust color as needed
+            outline: {
+              color: [255, 255, 255],
+              width: 1
+            }
+          }
+        }
+      })
+      map.add(featureLayer) */
+      const graphic = new Graphic({
+        symbol: {
+          title: "test",
+          type: "simple-fill", // autocasts as new SimpleFillSymbol()
+          color: [255, 140, 0, 0.3],
+          style: "solid",
+          outline: {
+            // autocasts as new SimpleLineSymbol()
+            color: [255, 140, 0, 1],
+            width: 2
+          }
+        },
+        geometry: {
+          type: "polygon",
+          spatialReference: {
+            wkid: 102100
+          }
+        },
+      })
+      const graphicLayer = new GraphicsLayer({
+        graphic: [graphic],
+        elevationInfo: {
+          mode: "on-the-ground"
+        }
+      })
+      map.add(graphicLayer)
+      const sketch = new Sketch({
+        view: view,
+        layer: graphicLayer,
+      })
+      view.ui.add(sketch, "top-right")
+      sketch.on("create", function (event) {
+        if (event.state === "complete" && event.graphic) { // 检查 event.graphic 是否存在
+          const buffer = geometryEngine.buffer(event.graphic.geometry, 5, "kilometers");
+          const bufferGraphic = new Graphic({
+            geometry: buffer,
+            symbol: {
+              type: "simple-fill",
+              color: [255, 140, 0, 0.3],
+              style: "solid",
+              outline: {
+                color: [255, 140, 0, 1],
+                width: 2
+              }
+            }
+          });
+          graphicLayer.add(bufferGraphic); // 将缓冲区图形添加到图形层
+        }else{
+          console.log("未完成绘制")
+        }
+      });
+    })
+  </script>
+
+</head>
+
+<body>
+  <div id="viewDiv"></div>
+</body>
+
+</html>

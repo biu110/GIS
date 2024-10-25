@@ -1,0 +1,119 @@
+<!DOCTYPE html>
+<html xmlns="http://www.w3.org/1999/xhtml">
+
+<head>
+  <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
+
+  <link rel="stylesheet" href="https://js.arcgis.com/4.30/esri/themes/light/main.css">
+  <script src="https://js.arcgis.com/4.30/"></script>
+
+
+
+  <title>实现用户交互画图Draw工具</title>
+
+  <style type="text/css">
+    .MapClass {
+      width: 100%;
+      height: 500px;
+      border: 1px solid #000;
+    }
+  </style>
+  <script type="text/javascript">
+
+    require(["esri/map", "dojo/dom", "dojo/on",
+      "esri/layers/ArcGISDynamicMapServiceLayer",
+      "dojo/query", "esri/toolbars/draw",
+      "esri/symbols/SimpleLineSymbol",
+      "esri/graphic",
+      "esri/symbols/SimpleMarkerSymbol",
+      "esri/symbols/SimpleFillSymbol",
+      "dojo/domReady!"],
+      function (Map, dom, on, ArcGISDynamicMapServiceLayer, query, Draw, SimpleLineSymbol, Graphic, SimpleMarkerSymbol, SimpleFillSymbol) {
+        var map = new esri.Map("MyMapDiv");
+        var layer = new ArcGISDynamicMapServiceLayer
+          ("http://localhost:6080/arcgis/rest/services/Test/广州市城市总体规划/MapServer");
+        map.addLayer(layer)
+        var toolbar = new Draw(map, { showTooltips: true });
+
+        var lineSymbol = new SimpleLineSymbol(SimpleLineSymbol.STYLE_DASH, new dojo.Color([255, 0, 0]), 3);
+        var marker = new SimpleMarkerSymbol(SimpleMarkerSymbol.STYLE_CIRCLE, 10, lineSymbol, new dojo.Color([255, 0, 0]));
+        var fill = new SimpleFillSymbol(SimpleFillSymbol.STYLE_SOLID, lineSymbol, new dojo.Color([255, 0, 0]));
+        on(toolbar, "draw-complete", function (result) {  //给绘图工具绑定绘图完成事件
+          //获得几何形状
+          var geometry = result.geometry;
+          //获得形状的类型
+          var type = geometry.type;
+          //声明图形对象
+          var graphic;
+          //通过几何形状的类型，创建不同的图形
+          switch (type) {
+            case "point":
+              graphic = new Graphic(geometry, marker);
+              break;
+            case "polyline":
+              graphic = new Graphic(geometry, lineSymbol);
+              break;
+            case "polygon":
+              graphic = new Graphic(geometry, fill);
+              break;
+          }
+          map.graphics.add(graphic);
+          //关掉绘图工具
+          toolbar.deactivate();
+        });
+        query("button").on("click", function (event) {
+          //            var value=event.rangeParent.data;
+          var value = this.innerHTML;
+          switch (value) {
+            case "绘制点": {
+              //激活绘图工具（画点）
+              toolbar.activate(Draw.POINT, {
+                showTooltips: true
+              });
+              break;
+            }
+            case "绘制折线": {
+              //激活绘图工具（画折线）
+              toolbar.activate(Draw.POLYLINE, {
+                showTooltips: true
+              });
+              break;
+            }
+            case "绘制面": {
+              //激活绘图工具（绘制面）
+              toolbar.activate(Draw.POLYGON, {
+                showTooltips: true
+              });
+              break;
+            }
+            case "徒手线": {
+              //激活绘图工具（徒手线）
+              toolbar.activate(Draw.FREEHAND_POLYLINE, {
+                showTooltips: true
+              });
+              break;
+            }
+            case "徒手面": {
+              //激活绘图工具（徒手面）
+              toolbar.activate(Draw.FREEHAND_POLYGON, {
+                showTooltips: true
+              });
+              break;
+            }
+
+          }
+        });
+      });
+  </script>
+</head>
+
+<body>
+  <div id="MyMapDiv" class="MapClass"></div>
+  <button>绘制点</button>
+  <button>绘制折线</button>
+  <button>绘制面</button>
+  <button>徒手线</button>
+  <button>徒手面</button>
+</body>
+
+</html>
